@@ -87,8 +87,11 @@ to spread-virus
         [ if random-float 100 < virus-spread-chance
             [ become-infected ] ] ]
 
-  ask n-of infect-this-many-people-addtn turtles
-    [ become-infected ]
+  ;ask n-of infect-this-many-people-addtn turtles with [not resistant?]
+  ; [ if infect-this-many-people-addtn <= count turtles with [not resistant?] [ become-infected ] ]
+
+  if infect-this-many-people-addtn <= count turtles with [not resistant? and not infected?]
+  [ ask n-of infect-this-many-people-addtn turtles with [not resistant? and not infected?] [become-infected] ]
 end
 
 to do-virus-checks
@@ -143,7 +146,7 @@ gain-resistance-chance
 gain-resistance-chance
 0.0
 100
-0
+7
 1
 1
 %
@@ -173,7 +176,7 @@ virus-spread-chance
 virus-spread-chance
 0.0
 10.0
-4.7
+2.8
 0.1
 1
 %
@@ -242,7 +245,7 @@ number-of-sites
 number-of-sites
 10
 500
-185
+345
 5
 1
 NIL
@@ -256,8 +259,8 @@ SLIDER
 infect-this-many-people-addtn
 infect-this-many-people-addtn
 0
-5
-3
+10
+10
 1
 1
 ticks
@@ -287,7 +290,7 @@ average-site-degree
 average-site-degree
 1
 number-of-sites - 1
-7
+12
 1
 1
 NIL
