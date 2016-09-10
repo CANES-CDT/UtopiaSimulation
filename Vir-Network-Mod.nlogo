@@ -1,14 +1,32 @@
-
 turtles-own
 [
   infected?           ;; if true, the turtle is infectious
   resistant?          ;; if true, the turtle can't be infected
   virus-check-timer   ;; number of ticks since this turtle's last virus-check
-  virus-check-frequency  ;; frequncy of checks
+
+]
+
+globals
+[
+  virus-check-frequency ;; MOD amount of time until turtles check whether infected or not
+  recovery-chance ;; MOD chance of recovery, fixed to chance of spread to maintain equlibrium
+  initial-outbreak-size ;; MOD size of initial outbreak, to be function of population size
+  forced-outbreak-size ; MOD size of outbreak which can be caused by the user [see cause-outbreak]
+  n-recent-infected ;; MOD model paramter, number  most recently infected to average over
+  recent-infected ;; MOD stores a list of the last n-recent-infected numbers of infected people
+  grad-recent-infected ;; MOD stores grad of recently infected
+  equil-threshold ;; MOD threshold of ave gradient below which system classed as equilibrium
 ]
 
 to setup
   clear-all
+  set virus-check-frequency 1 ;; MOD previously a control parameter now fixed
+  set recovery-chance virus-infection-chance ;; MOD previously control parameter, now fix to maintain equib
+  set initial-outbreak-size number-of-people * 0.1  ;; MOD 10% of people initially infected
+  set forced-outbreak-size number-of-people * 0.2  ;; MOD User can attempt to infect 5% of population
+  set recent-infected (list ) ;; MOD initialize an empty list
+  set n-recent-infected 15 ;; MOD no. timesteps over which to determine equilibrium
+  set equil-threshold 10 ;; MOD if std dev inside this percentage, classed as equilibrium
   setup-nodes
   setup-spatially-clustered-network
   ask n-of initial-outbreak-size turtles
@@ -18,19 +36,19 @@ to setup
 end
 
 to setup-nodes
-  set-default-shape turtles "circle"
-  create-turtles number-of-sites
+  set-default-shape turtles "person"
+  create-turtles number-of-people
   [
     ; for visual reasons, we don't put any nodes *too* close to the edges
     setxy (random-xcor * 0.95) (random-ycor * 0.95)
     become-susceptible
-    set virus-check-frequency 1
     set virus-check-timer random virus-check-frequency
   ]
+  ask turtles [ set size 3 ]
 end
 
 to setup-spatially-clustered-network
-  let num-links (average-site-degree * number-of-sites) / 2
+  let num-links (average-number-of-friends * number-of-people) / 2
   while [count links < num-links ]
   [
     ask one-of turtles
@@ -43,7 +61,7 @@ to setup-spatially-clustered-network
   ; make the network look a little prettier
   repeat 10
   [
-    layout-spring turtles links 0.3 (world-width / (sqrt number-of-sites)) 1
+    layout-spring turtles links 0.3 (world-width / (sqrt number-of-people)) 1
   ]
 end
 
@@ -58,7 +76,6 @@ to go
   ]
   spread-virus
   do-virus-checks
-  ;variance-check
   tick
 end
 
@@ -84,14 +101,8 @@ end
 to spread-virus
   ask turtles with [infected?]
     [ ask link-neighbors with [not resistant?]
-        [ if random-float 100 < virus-spread-chance
+        [ if random-float 100 < virus-infection-chance
             [ become-infected ] ] ]
-
-  ;ask n-of infect-this-many-people-addtn turtles with [not resistant?]
-  ; [ if infect-this-many-people-addtn <= count turtles with [not resistant?] [ become-infected ] ]
-
-  if infect-this-many-people-addtn <= count turtles with [not resistant? and not infected?]
-  [ ask n-of infect-this-many-people-addtn turtles with [not resistant? and not infected?] [become-infected] ]
 end
 
 to do-virus-checks
@@ -99,25 +110,53 @@ to do-virus-checks
   [
     if random 100 < recovery-chance
     [
-      ifelse random 100 < gain-resistance-chance
+      ifelse random 100 < immunity-chance
         [ become-resistant ]
         [ become-susceptible ]
     ]
   ]
 end
 
+;; all MOD below this point
+to cause-outbreak
+  if forced-outbreak-size <= count turtles with [not resistant? and not infected?]
+  [ ask n-of forced-outbreak-size turtles with [not resistant? and not infected?] [become-infected] ]
+end
+
+;; to-report equilibrium
+to get-recent-infected
+  set recent-infected lput count turtles with [infected?] recent-infected ;; adds number of infected turtles to end of list
+  if length recent-infected > n-recent-infected
+   [ ;; remove first item of recent-infected if average period exceeded
+     set recent-infected but-first recent-infected
+   ]
+end
+
+to get-grad-recent-infected
+  get-recent-infected
+  ifelse length recent-infected > 1
+   [ set grad-recent-infected abs ((last recent-infected) - (first recent-infected))  ]
+   [ set grad-recent-infected 0 ]
+end
+
+to-report equilibrium
+  get-grad-recent-infected
+  ifelse grad-recent-infected < equil-threshold
+    [ report "EQUILIBRIUM" ]
+    [ report "NON-EQUILIBRIUM" ]
+end
 
 ; Copyright 2008 Uri Wilensky.
 ; See Info tab for full copyright and license.
 @#$#@#$#@
 GRAPHICS-WINDOW
-265
-10
-732
-498
+1043
+15
+1871
+864
 20
 20
-11.15
+19.95122
 1
 10
 1
@@ -138,55 +177,40 @@ ticks
 30.0
 
 SLIDER
-25
-280
-231
-313
-gain-resistance-chance
-gain-resistance-chance
+16
+831
+1040
+864
+immunity-chance
+immunity-chance
 0.0
 100
-7
+0
 1
 1
 %
 HORIZONTAL
 
 SLIDER
-25
-245
-231
-278
-recovery-chance
-recovery-chance
+19
+303
+662
+336
+virus-infection-chance
+virus-infection-chance
 0.0
 10.0
-4.7
-0.1
-1
-%
-HORIZONTAL
-
-SLIDER
-25
-175
-231
-208
-virus-spread-chance
-virus-spread-chance
-0.0
-10.0
-2.8
+1.7
 0.1
 1
 %
 HORIZONTAL
 
 BUTTON
-25
-125
-120
-165
+15
+10
+336
+279
 NIL
 setup
 NIL
@@ -200,10 +224,10 @@ NIL
 1
 
 BUTTON
-135
-125
-230
-165
+343
+11
+671
+277
 NIL
 go
 T
@@ -217,11 +241,11 @@ NIL
 0
 
 PLOT
-5
-325
-260
-489
-Network Status
+9
+447
+1023
+821
+Infection Status
 time
 % of nodes
 0.0
@@ -237,64 +261,62 @@ PENS
 "resistant" 1.0 0 -7500403 true "" "plot (count turtles with [resistant?]) / (count turtles) * 100"
 
 SLIDER
-25
-15
-229
-48
-number-of-sites
-number-of-sites
+18
+353
+662
+386
+number-of-people
+number-of-people
 10
-500
-345
+150
+70
 5
 1
 NIL
 HORIZONTAL
 
 SLIDER
-25
-210
-231
-243
-infect-this-many-people-addtn
-infect-this-many-people-addtn
+19
+399
+668
+432
+average-number-of-friends
+average-number-of-friends
+1
+40
+8
+1
+1
+NIL
+HORIZONTAL
+
+BUTTON
+688
+10
+1034
+277
+Infect People!!
+cause-outbreak
+NIL
+1
+T
+OBSERVER
+NIL
+NIL
+NIL
+NIL
 0
-10
-10
-1
-1
-ticks
-HORIZONTAL
 
-SLIDER
-25
-85
-230
-118
-initial-outbreak-size
-initial-outbreak-size
+MONITOR
+674
+304
+1032
+425
+Equilibrium Checker
+equilibrium
+17
 1
-number-of-sites
-16
-1
-1
-NIL
-HORIZONTAL
-
-SLIDER
-25
-50
-230
-83
-average-site-degree
-average-site-degree
-1
-number-of-sites - 1
-12
-1
-1
-NIL
-HORIZONTAL
+30
 
 @#$#@#$#@
 ## WHAT IS IT?
