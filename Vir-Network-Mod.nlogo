@@ -16,20 +16,15 @@ globals
   recent-infected ;; MOD stores a list of the last n-recent-infected numbers of infected people
   grad-recent-infected ;; MOD stores grad of recently infected
   equil-threshold ;; MOD threshold of ave gradient below which system classed as equilibrium
-  run-length ;; MOD max run length for diagnostic purposes
-  history ;; MOD history of system, to hold a list of lists of [%susceptible, % infected pairs]
 ]
 
 to setup
   clear-all
-  if average-number-of-friends > number-of-people - 1 [ stop ]
   set virus-check-frequency 1 ;; MOD previously a control parameter now fixed
   set recovery-chance virus-infection-chance ;; MOD previously control parameter, now fix to maintain equib
   set initial-outbreak-size number-of-people * 0.1  ;; MOD 10% of people initially infected
-  set forced-outbreak-size number-of-people * 0.1  ;; MOD User can attempt to infect 10% of population
+  set forced-outbreak-size number-of-people * 0.2  ;; MOD User can attempt to infect 5% of population
   set recent-infected (list ) ;; MOD initialize an empty list
-  set history [] ;; empty list to record system history
-  set run-length 2000 ;; arbitrary large value
   set n-recent-infected 15 ;; MOD no. timesteps over which to determine equilibrium
   set equil-threshold 10 ;; MOD if std dev inside this percentage, classed as equilibrium
   setup-nodes
@@ -81,15 +76,7 @@ to go
   ]
   spread-virus
   do-virus-checks
-  update-history
-
   tick
-
-  if(ticks = run-length)
-  [
-    output-data
-    stop
-  ]
 end
 
 to become-infected  ;; turtle procedure
@@ -159,35 +146,11 @@ to-report equilibrium
     [ report "NON-EQUILIBRIUM" ]
 end
 
-<<<<<<< HEAD
 to master-reset
   set virus-infection-chance 2.5
   set number-of-people 60
   set average-number-of-friends 10
   set immunity-chance 0
-=======
-to update-history
-  let s count turtles with [not infected? and not resistant?] / (count turtles) * 100
-  let i count turtles with [infected?] / (count turtles) * 100
-  set history lput (list s i) history
-end
-
-;output sample-set data in csv format (columns = [% susceptible, % infected], rows = ticks)
-to output-data
-
-  let filename (word "param_tests/VIC" virus-infection-chance "_N" number-of-people "_K" average-number-of-friends "_IC" immunity-chance ".csv")
-  carefully [file-delete filename] []
-  file-open filename
-
-  foreach history
-   [
-     file-write first ?
-     file-write ","
-     file-write last ?
-     file-print ""
-   ]
-  file-close
->>>>>>> 0a8eff397bb065c10003a2a4e4ef0a3028ab4d07
 end
 
 ; Copyright 2008 Uri Wilensky.
@@ -230,7 +193,7 @@ immunity-chance
 0.0
 100
 0
-10
+1
 1
 %
 HORIZONTAL
@@ -328,11 +291,7 @@ average-number-of-friends
 average-number-of-friends
 1
 min (list 40 (number-of-people - 1))
-<<<<<<< HEAD
 10
-=======
-9
->>>>>>> 0a8eff397bb065c10003a2a4e4ef0a3028ab4d07
 1
 1
 NIL
@@ -752,18 +711,6 @@ NetLogo 5.3.1
 @#$#@#$#@
 @#$#@#$#@
 @#$#@#$#@
-<experiments>
-  <experiment name="check-equilibrium" repetitions="1" runMetricsEveryStep="false">
-    <setup>setup</setup>
-    <go>go</go>
-    <enumeratedValueSet variable="immunity-chance">
-      <value value="0"/>
-    </enumeratedValueSet>
-    <steppedValueSet variable="average-number-of-friends" first="1" step="5" last="40"/>
-    <steppedValueSet variable="virus-infection-chance" first="0" step="1" last="10"/>
-    <steppedValueSet variable="number-of-people" first="10" step="5" last="150"/>
-  </experiment>
-</experiments>
 @#$#@#$#@
 @#$#@#$#@
 default
