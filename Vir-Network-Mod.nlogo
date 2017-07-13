@@ -146,17 +146,24 @@ to-report equilibrium
     [ report "NON-EQUILIBRIUM" ]
 end
 
+to master-reset
+  set virus-infection-chance 2.5
+  set number-of-people 60
+  set average-number-of-friends 10
+  set immunity-chance 0
+end
+
 ; Copyright 2008 Uri Wilensky.
 ; See Info tab for full copyright and license.
 @#$#@#$#@
 GRAPHICS-WINDOW
-1043
-15
-1871
-864
+929
+10
+1643
+745
 20
 20
-19.95122
+17.171
 1
 10
 1
@@ -177,10 +184,10 @@ ticks
 30.0
 
 SLIDER
-16
-831
-1040
-864
+22
+701
+587
+734
 immunity-chance
 immunity-chance
 0.0
@@ -192,25 +199,25 @@ immunity-chance
 HORIZONTAL
 
 SLIDER
-19
-303
-662
-336
+18
+238
+561
+271
 virus-infection-chance
 virus-infection-chance
 0.0
 10.0
-1.7
+2.5
 0.1
 1
 %
 HORIZONTAL
 
 BUTTON
-15
+242
 10
-336
-279
+471
+234
 NIL
 setup
 NIL
@@ -224,10 +231,10 @@ NIL
 1
 
 BUTTON
-343
-11
-671
-277
+481
+10
+695
+232
 NIL
 go
 T
@@ -241,10 +248,10 @@ NIL
 0
 
 PLOT
-9
-447
-1023
-821
+16
+415
+919
+690
 Infection Status
 time
 % of nodes
@@ -262,14 +269,14 @@ PENS
 
 SLIDER
 18
-353
-662
-386
+311
+562
+344
 number-of-people
 number-of-people
 10
 150
-70
+60
 5
 1
 NIL
@@ -277,24 +284,24 @@ HORIZONTAL
 
 SLIDER
 19
-399
-668
-432
+371
+561
+404
 average-number-of-friends
 average-number-of-friends
 1
-40
-8
+min (list 40 (number-of-people - 1))
+10
 1
 1
 NIL
 HORIZONTAL
 
 BUTTON
-688
+701
 10
-1034
-277
+925
+240
 Infect People!!
 cause-outbreak
 NIL
@@ -308,15 +315,32 @@ NIL
 0
 
 MONITOR
-674
-304
-1032
-425
+577
+278
+924
+399
 Equilibrium Checker
 equilibrium
 17
 1
 30
+
+BUTTON
+11
+13
+235
+234
+Master Reset
+master-reset
+NIL
+1
+T
+OBSERVER
+NIL
+NIL
+NIL
+NIL
+1
 
 @#$#@#$#@
 ## WHAT IS IT?
